@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Images</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #333; color: white; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .test-item { background: #444; padding: 10px; border-radius: 8px; text-align: center; }
+        .test-item img { max-width: 100%; height: 150px; object-fit: cover; border-radius: 4px; }
+        .test-item p { margin: 5px 0; font-size: 12px; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Test</h1>
+    <div class="test-grid">
+        <div class="test-item">
+            <img src="Mega Mass 2000.jpg" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>Mega Mass 2000.jpg</p>
+        </div>
+        <div class="test-item">
+            <img src="Serious Mass Gainer.jpg" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>Serious Mass Gainer.jpg</p>
+        </div>
+        <div class="test-item">
+            <img src="BPC 157.png" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>BPC 157.png</p>
+        </div>
+        <div class="test-item">
+            <img src="C4 Ultimate.jpg" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>C4 Ultimate.jpg</p>
+        </div>
+        <div class="test-item">
+            <img src="Semaglutide.jpg" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>Semaglutide.jpg</p>
+        </div>
+        <div class="test-item">
+            <img src="Vitamin D3 5000 UI.png" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>Vitamin D3 5000 UI.png</p>
+        </div>
+        <div class="test-item">
+            <img src="Stim-Free Pre-Workout.webp" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>Stim-Free Pre-Workout.webp</p>
+        </div>
+        <div class="test-item">
+            <img src="Platinum Multivitamin.jpeg" onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='ERROR: ' + this.src">
+            <p>Platinum Multivitamin.jpeg</p>
+        </div>
+    </div>
+    <h2>Admin Email Test</h2>
+    <p>Admin email should be: homeofreta@gmail.com</p>
+    <script>
+        // Test admin email constant
+        const ADMIN_EMAIL = "homeofreta@gmail.com";
+        document.write('<p class="success">✓ Admin email loaded: ' + ADMIN_EMAIL + '</p>');
+    </script>
+</body>
+</html>

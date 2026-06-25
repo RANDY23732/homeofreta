@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase Storage Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #333; color: white; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .upload-form { background: #444; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="file"] { width: 100%; padding: 10px; border: 1px solid #666; border-radius: 4px; background: #555; color: white; }
+        button { background: #ff9800; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #e68900; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 4px; }
+        .success { background: #4caf50; }
+        .error { background: #f44336; }
+        .preview { margin: 20px 0; text-align: center; }
+        .preview img { max-width: 300px; max-height: 300px; border-radius: 8px; }
+        .progress { margin: 10px 0; }
+        .progress-bar { width: 100%; height: 20px; background: #ddd; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #ff9800; width: 0%; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Firebase Storage Upload</h1>
+        
+        <div class="upload-form">
+            <h2>Upload Image to Firebase Storage</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="imageFile">Select Image:</label>
+                    <input type="file" id="imageFile" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="folder">Folder Name:</label>
+                    <input type="text" id="folder" value="products" placeholder="products">
+                </div>
+                <button type="submit">Upload to Firebase</button>
+            </form>
+            
+            <div id="progress" class="progress" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <p id="progressText">0%</p>
+            </div>
+        </div>
+        
+        <div id="result"></div>
+        <div id="preview" class="preview"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkZx7Y8X9W2Q3R4T5U6V7W8X9Y0Z1",
+            authDomain: "reta-ecommerce.firebaseapp.com",
+            projectId: "reta-ecommerce",
+            storageBucket: "reta-ecommerce.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const storage = firebase.storage();
+
+        // Firebase Upload Function
+        async function uploadImageToFirebase(file, folder = 'products') {
+            return new Promise((resolve, reject) => {
+                const storageRef = storage.ref();
+                const fileName = `${folder}/${Date.now()}_${file.name}`;
+                const fileRef = storageRef.child(fileName);
+                
+                const uploadTask = fileRef.put(file);
+                
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        document.getElementById('progressFill').style.width = progress + '%';
+                        document.getElementById('progressText').textContent = Math.round(progress) + '%';
+                        console.log('Upload is ' + progress + '% done');
+                    },
+                    (error) => {
+                        console.error('Upload error:', error);
+                        reject(error);
+                    },
+                    () => {
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            console.log('File available at', downloadURL);
+                            resolve({ 
+                                success: true, 
+                                image_url: downloadURL,
+                                filename: fileName
+                            });
+                        }).catch((error) => {
+                            console.error('Error getting download URL:', error);
+                            reject(error);
+                        });
+                    }
+                );
+            });
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('imageFile');
+            const folderInput = document.getElementById('folder');
+            const resultDiv = document.getElementById('result');
+            const previewDiv = document.getElementById('preview');
+            const progressDiv = document.getElementById('progress');
+            
+            if (!fileInput.files[0]) {
+                showResult('Please select a file', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const folder = folderInput.value || 'products';
+            
+            try {
+                resultDiv.innerHTML = '';
+                previewDiv.innerHTML = '';
+                progressDiv.style.display = 'block';
+                
+                const result = await uploadImageToFirebase(file, folder);
+                
+                progressDiv.style.display = 'none';
+                
+                if (result.success) {
+                    showResult('✅ Upload successful to Firebase Storage!', 'success');
+                    
+                    // Show preview
+                    previewDiv.innerHTML = `
+                        <h3>Uploaded Image Preview:</h3>
+                        <img src="${result.image_url}" alt="Uploaded image">
+                        <p><strong>Image URL:</strong> <a href="${result.image_url}" target="_blank">${result.image_url}</a></p>
+                        <p><strong>File Name:</strong> ${result.filename}</p>
+                        <p><strong>Folder:</strong> ${folder}</p>
+                        <p><strong>Storage:</strong> Firebase Storage</p>
+                    `;
+                } else {
+                    showResult('❌ Upload failed: ' + result.message, 'error');
+                }
+            } catch (error) {
+                progressDiv.style.display = 'none';
+                showResult('❌ Network error: ' + error.message, 'error');
+            }
+        });
+        
+        // Show preview when file is selected
+        document.getElementById('imageFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('preview').innerHTML = `
+                        <h3>Selected Image Preview:</h3>
+                        <img src="${e.target.result}" alt="Selected image">
+                        <p><strong>File:</strong> ${file.name}</p>
+                        <p><strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+                        <p><strong>Type:</strong> ${file.type}</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

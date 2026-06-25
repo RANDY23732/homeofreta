@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Image Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #333; color: white; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .upload-form { background: #444; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="file"] { width: 100%; padding: 10px; border: 1px solid #666; border-radius: 4px; background: #555; color: white; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 4px; }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+        .preview { margin: 20px 0; text-align: center; }
+        .preview img { max-width: 300px; max-height: 300px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Image Upload Functionality</h1>
+        
+        <div class="upload-form">
+            <h2>Upload Test Image</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="imageFile">Select Image:</label>
+                    <input type="file" id="imageFile" accept="image/*" required>
+                </div>
+                <button type="submit">Upload Image</button>
+            </form>
+        </div>
+        
+        <div id="result"></div>
+        <div id="preview" class="preview"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('imageFile');
+            const resultDiv = document.getElementById('result');
+            const previewDiv = document.getElementById('preview');
+            
+            if (!fileInput.files[0]) {
+                showResult('Please select a file', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            
+            try {
+                resultDiv.innerHTML = '<div class="result">Uploading...</div>';
+                previewDiv.innerHTML = '';
+                
+                const response = await fetch('upload_product_image.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('✅ Upload successful! Image URL: ' + result.image_url, 'success');
+                    
+                    // Show preview
+                    previewDiv.innerHTML = `
+                        <h3>Uploaded Image Preview:</h3>
+                        <img src="${result.image_url}" alt="Uploaded image">
+                        <p><strong>Image URL:</strong> ${result.image_url}</p>
+                        <p><strong>Full Path:</strong> ${result.full_path || 'N/A'}</p>
+                    `;
+                } else {
+                    showResult('❌ Upload failed: ' + result.message, 'error');
+                    if (result.debug) {
+                        showResult('Debug Info: ' + JSON.stringify(result.debug, null, 2), 'error');
+                    }
+                }
+            } catch (error) {
+                showResult('❌ Network error: ' + error.message, 'error');
+            }
+        });
+        
+        // Show preview when file is selected
+        document.getElementById('imageFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('preview').innerHTML = `
+                        <h3>Selected Image Preview:</h3>
+                        <img src="${e.target.result}" alt="Selected image">
+                        <p><strong>File:</strong> ${file.name}</p>
+                        <p><strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+                        <p><strong>Type:</strong> ${file.type}</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
